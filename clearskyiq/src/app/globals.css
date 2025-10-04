@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* 🌌 NASA Space Apps color palette */
+@layer base {
+  :root {
+    --blue-yonder: #2E96F5;
+    --neon-blue: #0960E1;
+    --electric-blue: #0042A6;
+    --deep-blue: #07173F;
+    --rocket-red: #E43700;
+    --martian-red: #8E1100;
+    --neon-yellow: #EAFE07;
+    --white: #FFFFFF;
+
+    /* Light mode defaults */
+    --background: var(--white);
+    --foreground: var(--neon-yellow);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Dark mode adjustments */
+      --background: var(--deep-blue);
+      --foreground: var(--white);
+    }
+  }
+
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] font-sans;
+    font-family: var(--font-fira-sans), sans-serif;
+  }
+}
+
+/* Optional theme section (for Tailwind’s @theme inline syntax) */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
