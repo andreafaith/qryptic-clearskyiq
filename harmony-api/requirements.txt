@@ -1,16 +1,1 @@
-fastapi
-uvicorn[standard]
-python-multipart
-python-jose[cryptography]
-passlib[bcrypt]
-python-dotenv
-pydantic
-pydantic-settings
-httpx
-harmony-py
-setuptools
-matplotlib
-numpy
-xarray
-cartopy
-pillow
+

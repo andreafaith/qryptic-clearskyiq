@@ -499,6 +499,133 @@ async def visualize_tempo_data(
             message=f"Error creating visualization: {str(e)}"
         )
 
+@app.post("/tempo/visualize/all")
+async def visualize_all_tempo_data(
+    request: VisualizationRequest,
+    client: Client = Depends(get_harmony_client),
+    token: str = Depends(verify_token)
+):
+    """
+    Create ALL visualizations of TEMPO data in a single request
+    
+    This optimized endpoint fetches data once and generates all three
+    visualization types (map, zonal_mean, contour) from the same dataset.
+    """
+    try:
+        # Parse datetime strings
+        start_dt = dt.datetime.fromisoformat(request.start_time.replace('Z', '+00:00'))
+        end_dt = dt.datetime.fromisoformat(request.end_time.replace('Z', '+00:00'))
+        
+        # Create Harmony request
+        harmony_request = Request(
+            collection=Collection(id=request.collection_id),
+            temporal={
+                "start": start_dt,
+                "stop": end_dt,
+            },
+        )
+        
+        # Add spatial filter if provided
+        if request.bbox and len(request.bbox) == 4:
+            harmony_request.spatial = BBox(
+                request.bbox[0],  # west
+                request.bbox[1],  # south
+                request.bbox[2],  # east
+                request.bbox[3]   # north
+            )
+        
+        # Add variables if specified
+        if request.variables:
+            harmony_request.variables = request.variables
+        
+        # Submit job
+        job_id = client.submit(harmony_request)
+        
+        # Wait for processing
+        client.wait_for_processing(job_id, show_progress=True)
+        
+        # Download results
+        results = client.download_all(job_id, directory="/tmp", overwrite=True)
+        result_files = [f.result() for f in results]
+        
+        if not result_files:
+            return TempoDataResponse(
+                success=False,
+                message="No data files found for the specified parameters"
+            )
+        
+        # Process the first data file for visualization
+        datatree = xr.open_datatree(result_files[0])
+        
+        # Determine variable to plot
+        variable_name = "product/vertical_column"
+        if request.variables and request.variables[0]:
+            variable_name = request.variables[0]
+        
+        # Generate all three visualizations from the same dataset
+        visualizations = {}
+        plot_types = ["map", "zonal_mean", "contour"]
+        plot_names = ["Map", "Zonal Mean", "Contour"]
+        
+        for plot_type, plot_name in zip(plot_types, plot_names):
+            try:
+                if plot_type == "map":
+                    img_base64 = create_map_visualization(
+                        datatree, 
+                        variable_name, 
+                        f"TEMPO {variable_name} {plot_name}"
+                    )
+                elif plot_type == "zonal_mean":
+                    img_base64 = create_zonal_mean_plot(
+                        datatree, 
+                        variable_name, 
+                        f"TEMPO {variable_name} {plot_name}"
+                    )
+                elif plot_type == "contour":
+                    img_base64 = create_contour_plot(
+                        datatree, 
+                        variable_name, 
+                        f"TEMPO {variable_name} {plot_name}"
+                    )
+                
+                if img_base64:
+                    visualizations[plot_type] = {
+                        "image_base64": img_base64,
+                        "success": True
+                    }
+                else:
+                    visualizations[plot_type] = {
+                        "success": False,
+                        "error": f"Failed to generate {plot_name} visualization"
+                    }
+            except Exception as e:
+                visualizations[plot_type] = {
+                    "success": False,
+                    "error": f"Error generating {plot_name}: {str(e)}"
+                }
+        
+        # Count successes
+        success_count = sum(1 for v in visualizations.values() if v["success"])
+        
+        return TempoDataResponse(
+            success=success_count > 0,
+            data={
+                "job_id": job_id,
+                "variable": variable_name,
+                "files_processed": len(result_files),
+                "visualizations": visualizations,
+                "success_count": success_count,
+                "total_count": len(plot_types)
+            },
+            message=f"Generated {success_count}/{len(plot_types)} visualizations successfully"
+        )
+        
+    except Exception as e:
+        return TempoDataResponse(
+            success=False,
+            message=f"Error creating visualizations: {str(e)}"
+        )
+
 @app.get("/tempo/visualize/image/{job_id}")
 async def get_visualization_image(
     job_id: str,

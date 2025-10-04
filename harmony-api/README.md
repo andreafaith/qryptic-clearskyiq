@@ -48,7 +48,7 @@ Required environment variables:
 python main.py
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8001`
 
 ## API Endpoints
 
@@ -69,7 +69,7 @@ The API will be available at `http://localhost:8000`
 ### Fetch TEMPO Data
 
 ```bash
-curl -X POST "http://localhost:8000/tempo/data" \
+curl -X POST "http://localhost:8001/tempo/data" \
   -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
   -H "Content-Type: application/json" \
   -d '{
@@ -83,14 +83,14 @@ curl -X POST "http://localhost:8000/tempo/data" \
 ### Health Check
 
 ```bash
-curl "http://localhost:8000/health"
+curl "http://localhost:8001/health"
 ```
 
 ### Create Data Visualization
 
 ```bash
 # Create a map visualization
-curl -X POST "http://localhost:8000/tempo/visualize" \
+curl -X POST "http://localhost:8001/tempo/visualize" \
   -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
   -H "Content-Type: application/json" \
   -d '{
@@ -102,7 +102,7 @@ curl -X POST "http://localhost:8000/tempo/visualize" \
   }'
 
 # Create a zonal mean plot
-curl -X POST "http://localhost:8000/tempo/visualize" \
+curl -X POST "http://localhost:8001/tempo/visualize" \
   -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
   -H "Content-Type: application/json" \
   -d '{
@@ -113,7 +113,7 @@ curl -X POST "http://localhost:8000/tempo/visualize" \
   }'
 
 # Create a contour plot
-curl -X POST "http://localhost:8000/tempo/visualize" \
+curl -X POST "http://localhost:8001/tempo/visualize" \
   -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
   -H "Content-Type: application/json" \
   -d '{
@@ -127,8 +127,8 @@ curl -X POST "http://localhost:8000/tempo/visualize" \
 ## API Documentation
 
 Once running, visit:
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+- Swagger UI: `http://localhost:8001/docs`
+- ReDoc: `http://localhost:8001/redoc`
 
 ## Security
 
