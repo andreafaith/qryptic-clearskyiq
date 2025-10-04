@@ -9,6 +9,9 @@ A modern, secure FastAPI backend for fetching NASA TEMPO data using Harmony-py.
 - ⚡ **FastAPI** for high-performance async operations
 - 🛡️ **Input validation** with Pydantic models
 - 📊 **Data processing** with xarray and numpy
+- 🎨 **Data visualization** with matplotlib and cartopy
+- 🗺️ **Map visualizations** with geographic projections
+- 📈 **Scientific plots** including zonal means and contours
 - 🚀 **Easy deployment** with virtual environment
 
 ## Quick Start
@@ -45,7 +48,7 @@ Required environment variables:
 python main.py
 ```
 
-The API will be available at `http://localhost:8001`
+The API will be available at `http://localhost:8000`
 
 ## API Endpoints
 
@@ -57,12 +60,16 @@ The API will be available at `http://localhost:8001`
 - `POST /tempo/data` - Fetch TEMPO data with time range and optional spatial filter
 - `GET /tempo/collections` - Get available data collections
 
+### Data Visualization
+- `POST /tempo/visualize` - Create visualizations (maps, zonal means, contours) of TEMPO data
+- `GET /tempo/visualize/image/{job_id}` - Get visualization as PNG image (planned)
+
 ## Usage Examples
 
 ### Fetch TEMPO Data
 
 ```bash
-curl -X POST "http://localhost:8001/tempo/data" \
+curl -X POST "http://localhost:8000/tempo/data" \
   -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
   -H "Content-Type: application/json" \
   -d '{
@@ -76,14 +83,52 @@ curl -X POST "http://localhost:8001/tempo/data" \
 ### Health Check
 
 ```bash
-curl "http://localhost:8001/health"
+curl "http://localhost:8000/health"
+```
+
+### Create Data Visualization
+
+```bash
+# Create a map visualization
+curl -X POST "http://localhost:8000/tempo/visualize" \
+  -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_time": "2023-12-30T22:30:00",
+    "end_time": "2023-12-30T22:45:00",
+    "bbox": [-115, 35, -95, 45],
+    "plot_type": "map",
+    "variables": ["product/vertical_column"]
+  }'
+
+# Create a zonal mean plot
+curl -X POST "http://localhost:8000/tempo/visualize" \
+  -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_time": "2023-12-30T22:30:00",
+    "end_time": "2023-12-30T22:45:00",
+    "plot_type": "zonal_mean",
+    "variables": ["product/vertical_column"]
+  }'
+
+# Create a contour plot
+curl -X POST "http://localhost:8000/tempo/visualize" \
+  -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_time": "2023-12-30T22:30:00",
+    "end_time": "2023-12-30T22:45:00",
+    "plot_type": "contour",
+    "variables": ["product/vertical_column"]
+  }'
 ```
 
 ## API Documentation
 
 Once running, visit:
-- Swagger UI: `http://localhost:8001/docs`
-- ReDoc: `http://localhost:8001/redoc`
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
 
 ## Security
 

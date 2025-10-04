@@ -9,3 +9,8 @@ pydantic-settings
 httpx
 harmony-py
 setuptools
+matplotlib
+numpy
+xarray
+cartopy
+pillow

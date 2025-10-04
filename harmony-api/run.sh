@@ -29,3 +29,4 @@ fi
 # Start the API
 echo "🌍 Starting Harmony API server..."
 python main.py
+
