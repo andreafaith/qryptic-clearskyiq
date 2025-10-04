@@ -54,7 +54,7 @@ export default function Home() {
               height={40}
               className="rounded"
             />
-            <span className="font-semibold text-lg tracking-wide">ClearSkyIQ</span>
+            {/* <span className="font-semibold text-lg tracking-wide">ClearSkyIQ</span> */}
           </div>
 
           {/* Right columns */}
