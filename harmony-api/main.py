@@ -7,8 +7,14 @@ import os
 import datetime as dt
 import io
 import base64
+import asyncio
+import uuid
+import hashlib
+import time
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 import numpy as np
 import xarray as xr
@@ -20,13 +26,14 @@ import cartopy.feature as cfeature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from xarray.plot.utils import label_from_attrs
 
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import httpx
+import json
 
 from harmony import BBox, Client, Collection, Request
 from harmony.config import Environment
@@ -67,8 +74,101 @@ class HealthResponse(BaseModel):
     timestamp: str
     version: str
 
+class ParallelVisualizationRequest(BaseModel):
+    """Request model for parallel data visualization"""
+    start_time: str = Field(..., description="Start time in ISO format (YYYY-MM-DDTHH:MM:SS)")
+    end_time: str = Field(..., description="End time in ISO format (YYYY-MM-DDTHH:MM:SS)")
+    bbox: Optional[List[float]] = Field(None, description="Bounding box [west, south, east, north]")
+    variables: Optional[List[str]] = Field(None, description="Specific variables to visualize")
+    plot_types: List[str] = Field(..., description="List of plot types: 'map', 'zonal_mean', 'contour'")
+    collection_id: str = Field("C2930730944-LARC_CLOUD", description="Collection ID for TEMPO data")
+
+class JobStatus(BaseModel):
+    """Job status response"""
+    job_id: str
+    status: str  # "queued", "processing", "completed", "failed"
+    progress: int  # 0-100
+    completed_plots: List[str]
+    failed_plots: List[str]
+    results: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
 # Global variables
 harmony_client: Optional[Client] = None
+
+# Job queue and processing system
+job_queue = {}
+job_results = {}
+job_lock = threading.Lock()
+executor = ThreadPoolExecutor(max_workers=4)  # Limit concurrent processing
+
+# Caching system
+cache = {}
+cache_lock = threading.Lock()
+CACHE_TTL = 3600  # Cache for 1 hour (3600 seconds)
+CACHE_MAX_SIZE = 100  # Maximum number of cached items
+
+def generate_cache_key(request_data: Dict[str, Any], endpoint: str) -> str:
+    """Generate a unique cache key based on request parameters"""
+    # Create a deterministic string from the request data
+    key_data = {
+        "endpoint": endpoint,
+        "start_time": request_data.get("start_time"),
+        "end_time": request_data.get("end_time"),
+        "bbox": request_data.get("bbox"),
+        "variable": request_data.get("variable"),
+        "plot_type": request_data.get("plot_type"),
+        "plot_types": request_data.get("plot_types"),
+        "collection_id": request_data.get("collection_id", "C2930730944-LARC_CLOUD")
+    }
+    
+    # Convert to JSON string and create hash
+    key_string = json.dumps(key_data, sort_keys=True)
+    return hashlib.md5(key_string.encode()).hexdigest()
+
+def get_from_cache(cache_key: str) -> Optional[Dict[str, Any]]:
+    """Get data from cache if it exists and is not expired"""
+    with cache_lock:
+        if cache_key in cache:
+            cached_item = cache[cache_key]
+            # Check if cache item is still valid
+            if time.time() - cached_item["timestamp"] < CACHE_TTL:
+                print(f"🎯 Cache HIT for key: {cache_key[:8]}...")
+                return cached_item["data"]
+            else:
+                # Remove expired item
+                del cache[cache_key]
+                print(f"⏰ Cache EXPIRED for key: {cache_key[:8]}...")
+        return None
+
+def store_in_cache(cache_key: str, data: Dict[str, Any]) -> None:
+    """Store data in cache with timestamp"""
+    with cache_lock:
+        # Remove oldest items if cache is full
+        if len(cache) >= CACHE_MAX_SIZE:
+            # Remove the oldest item
+            oldest_key = min(cache.keys(), key=lambda k: cache[k]["timestamp"])
+            del cache[oldest_key]
+            print(f"🗑️ Cache FULL - removed oldest item: {oldest_key[:8]}...")
+        
+        cache[cache_key] = {
+            "data": data,
+            "timestamp": time.time()
+        }
+        print(f"💾 Cache STORED for key: {cache_key[:8]}...")
+
+def clear_expired_cache():
+    """Remove expired items from cache"""
+    with cache_lock:
+        current_time = time.time()
+        expired_keys = [
+            key for key, item in cache.items() 
+            if current_time - item["timestamp"] >= CACHE_TTL
+        ]
+        for key in expired_keys:
+            del cache[key]
+        if expired_keys:
+            print(f"🧹 Cache CLEANUP - removed {len(expired_keys)} expired items")
 
 # Visualization helper functions
 def make_nice_map(axis):
@@ -92,16 +192,29 @@ def create_map_visualization(datatree, variable_name="product/vertical_column", 
         # Make nice map
         make_nice_map(ax)
         
-        # Plot the data
-        contour_handle = ax.contourf(
-            datatree["geolocation/longitude"],
-            datatree["geolocation/latitude"],
-            da,
-            levels=50,
-            vmin=0,
-            zorder=2,
-            transform=ccrs.PlateCarree()
-        )
+        # Handle different variable types
+        if variable_name == "product/main_data_quality_flag":
+            # For data quality flag, use discrete levels and colors
+            contour_handle = ax.contourf(
+                datatree["geolocation/longitude"],
+                datatree["geolocation/latitude"],
+                da,
+                levels=[-0.5, 0.5, 1.5, 2.5],
+                colors=['green', 'yellow', 'red'],
+                zorder=2,
+                transform=ccrs.PlateCarree()
+            )
+        else:
+            # For continuous data, use normal contour levels
+            contour_handle = ax.contourf(
+                datatree["geolocation/longitude"],
+                datatree["geolocation/latitude"],
+                da,
+                levels=50,
+                vmin=0,
+                zorder=2,
+                transform=ccrs.PlateCarree()
+            )
         
         # Add colorbar
         cb = plt.colorbar(contour_handle, ax=ax, shrink=0.8)
@@ -141,11 +254,19 @@ def create_zonal_mean_plot(datatree, variable_name="product/vertical_column", ti
         fig, ax = plt.subplots(figsize=(10, 6))
         
         # Plot zonal mean
-        product_lat_mean.plot(ax=ax)
+        if variable_name == "product/main_data_quality_flag":
+            # For data quality flag, use bar plot with discrete colors
+            colors = ['green' if x <= 0.5 else 'yellow' if x <= 1.5 else 'red' for x in product_lat_mean.values]
+            product_lat_mean.plot.bar(ax=ax, color=colors)
+            ax.set_ylabel("Data Quality Flag")
+            ax.set_ylim(-0.5, 2.5)
+        else:
+            product_lat_mean.plot(ax=ax)
+            ax.set_ylabel(label_from_attrs(da))
+        
         ax.invert_xaxis()
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.set_xlabel("Latitude")
-        ax.set_ylabel(label_from_attrs(da))
         
         # Convert to base64
         img_buffer = io.BytesIO()
@@ -170,9 +291,19 @@ def create_contour_plot(datatree, variable_name="product/vertical_column", title
         fig, ax = plt.subplots(figsize=(12, 8))
         
         # Create contour plot
-        contour = da.plot.contourf(
-            x="mirror_step", y="xtrack", vmin=0, ax=ax
-        )
+        if variable_name == "product/main_data_quality_flag":
+            # For data quality flag, use discrete levels and colors
+            contour = da.plot.contourf(
+                x="mirror_step", y="xtrack", 
+                levels=[-0.5, 0.5, 1.5, 2.5],
+                colors=['green', 'yellow', 'red'],
+                ax=ax
+            )
+        else:
+            # For continuous data, use normal contour
+            contour = da.plot.contourf(
+                x="mirror_step", y="xtrack", vmin=0, ax=ax
+            )
         
         ax.invert_xaxis()
         ax.set_title(title, fontsize=14, fontweight='bold')
@@ -189,6 +320,97 @@ def create_contour_plot(datatree, variable_name="product/vertical_column", title
     except Exception as e:
         print(f"Error creating contour plot: {e}")
         return None
+
+def process_single_visualization(datatree, plot_type, variable_name, job_id):
+    """Process a single visualization type"""
+    try:
+        with job_lock:
+            if job_id in job_results:
+                job_results[job_id]["completed_plots"].append(plot_type)
+                completed_count = len(job_results[job_id]["completed_plots"])
+                total_count = len(job_results[job_id]["plot_types"])
+                job_results[job_id]["progress"] = int((completed_count / total_count) * 100)
+        
+        # Generate the visualization
+        if plot_type == "map":
+            img_base64 = create_map_visualization(
+                datatree, 
+                variable_name, 
+                f"TEMPO {variable_name} Map"
+            )
+        elif plot_type == "zonal_mean":
+            img_base64 = create_zonal_mean_plot(
+                datatree, 
+                variable_name, 
+                f"TEMPO {variable_name} Zonal Mean"
+            )
+        elif plot_type == "contour":
+            img_base64 = create_contour_plot(
+                datatree, 
+                variable_name, 
+                f"TEMPO {variable_name} Contour"
+            )
+        else:
+            raise ValueError(f"Unknown plot type: {plot_type}")
+        
+        # Update results
+        with job_lock:
+            if job_id in job_results:
+                if img_base64:
+                    job_results[job_id]["results"][plot_type] = {
+                        "image_base64": img_base64,
+                        "success": True
+                    }
+                else:
+                    job_results[job_id]["results"][plot_type] = {
+                        "success": False,
+                        "error": f"Failed to generate {plot_type} visualization"
+                    }
+                    job_results[job_id]["failed_plots"].append(plot_type)
+                
+                # Check if all plots are done
+                total_plots = len(job_results[job_id]["plot_types"])
+                completed = len(job_results[job_id]["completed_plots"])
+                if completed >= total_plots:
+                    job_results[job_id]["status"] = "completed"
+                    job_results[job_id]["progress"] = 100
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error processing {plot_type}: {e}")
+        with job_lock:
+            if job_id in job_results:
+                job_results[job_id]["results"][plot_type] = {
+                    "success": False,
+                    "error": str(e)
+                }
+                job_results[job_id]["failed_plots"].append(plot_type)
+        return False
+
+def process_visualization_job(job_id, datatree, plot_types, variable_name):
+    """Process all visualizations for a job in parallel"""
+    try:
+        with job_lock:
+            job_results[job_id]["status"] = "processing"
+            job_results[job_id]["results"] = {}
+        
+        # Submit all plot types to thread pool
+        futures = []
+        for plot_type in plot_types:
+            future = executor.submit(process_single_visualization, datatree, plot_type, variable_name, job_id)
+            futures.append(future)
+        
+        # Wait for all to complete
+        for future in futures:
+            future.result()
+            
+    except Exception as e:
+        print(f"Error in job processing: {e}")
+        with job_lock:
+            if job_id in job_results:
+                job_results[job_id]["status"] = "failed"
+                job_results[job_id]["error"] = str(e)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -399,6 +621,14 @@ async def visualize_tempo_data(
     including maps, zonal means, and contour plots.
     """
     try:
+        # Check cache first
+        request_data = request.dict()
+        cache_key = generate_cache_key(request_data, "visualize")
+        cached_result = get_from_cache(cache_key)
+        
+        if cached_result:
+            return TempoDataResponse(**cached_result)
+        
         # Parse datetime strings
         start_dt = dt.datetime.fromisoformat(request.start_time.replace('Z', '+00:00'))
         end_dt = dt.datetime.fromisoformat(request.end_time.replace('Z', '+00:00'))
@@ -481,7 +711,8 @@ async def visualize_tempo_data(
                 message="Failed to create visualization"
             )
         
-        return TempoDataResponse(
+        # Create response
+        response = TempoDataResponse(
             success=True,
             data={
                 "job_id": job_id,
@@ -492,6 +723,11 @@ async def visualize_tempo_data(
             },
             message=f"Successfully created {request.plot_type} visualization"
         )
+        
+        # Store in cache
+        store_in_cache(cache_key, response.dict())
+        
+        return response
         
     except Exception as e:
         return TempoDataResponse(
@@ -512,6 +748,14 @@ async def visualize_all_tempo_data(
     visualization types (map, zonal_mean, contour) from the same dataset.
     """
     try:
+        # Check cache first
+        request_data = request.dict()
+        cache_key = generate_cache_key(request_data, "visualize_all")
+        cached_result = get_from_cache(cache_key)
+        
+        if cached_result:
+            return TempoDataResponse(**cached_result)
+        
         # Parse datetime strings
         start_dt = dt.datetime.fromisoformat(request.start_time.replace('Z', '+00:00'))
         end_dt = dt.datetime.fromisoformat(request.end_time.replace('Z', '+00:00'))
@@ -607,7 +851,8 @@ async def visualize_all_tempo_data(
         # Count successes
         success_count = sum(1 for v in visualizations.values() if v["success"])
         
-        return TempoDataResponse(
+        # Create response
+        response = TempoDataResponse(
             success=success_count > 0,
             data={
                 "job_id": job_id,
@@ -615,15 +860,211 @@ async def visualize_all_tempo_data(
                 "files_processed": len(result_files),
                 "visualizations": visualizations,
                 "success_count": success_count,
-                "total_count": len(plot_types)
+                "total_count": len(plot_types),
+                "bbox": request.bbox
             },
             message=f"Generated {success_count}/{len(plot_types)} visualizations successfully"
         )
+        
+        # Store in cache
+        store_in_cache(cache_key, response.dict())
+        
+        return response
         
     except Exception as e:
         return TempoDataResponse(
             success=False,
             message=f"Error creating visualizations: {str(e)}"
+        )
+
+@app.post("/tempo/visualize/parallel")
+async def start_parallel_visualization(
+    request: ParallelVisualizationRequest,
+    background_tasks: BackgroundTasks,
+    client: Client = Depends(get_harmony_client),
+    token: str = Depends(verify_token)
+):
+    """
+    Start parallel processing of multiple visualization types
+    
+    This endpoint starts processing multiple plot types in parallel and returns
+    a job ID that can be used to check status and get results.
+    """
+    try:
+        # Generate unique job ID
+        job_id = str(uuid.uuid4())
+        
+        # Parse datetime strings
+        start_dt = dt.datetime.fromisoformat(request.start_time.replace('Z', '+00:00'))
+        end_dt = dt.datetime.fromisoformat(request.end_time.replace('Z', '+00:00'))
+        
+        # Create Harmony request
+        harmony_request = Request(
+            collection=Collection(id=request.collection_id),
+            temporal={
+                "start": start_dt,
+                "stop": end_dt,
+            },
+        )
+        
+        # Add spatial filter if provided
+        if request.bbox and len(request.bbox) == 4:
+            harmony_request.spatial = BBox(
+                request.bbox[0],  # west
+                request.bbox[1],  # south
+                request.bbox[2],  # east
+                request.bbox[3]   # north
+            )
+        
+        # Add variables if specified
+        if request.variables:
+            harmony_request.variables = request.variables
+        
+        # Initialize job status
+        with job_lock:
+            job_results[job_id] = {
+                "status": "queued",
+                "progress": 0,
+                "completed_plots": [],
+                "failed_plots": [],
+                "plot_types": request.plot_types,
+                "results": {},
+                "error": None
+            }
+        
+        # Submit Harmony job
+        harmony_job_id = client.submit(harmony_request)
+        
+        # Start background processing
+        background_tasks.add_task(
+            process_parallel_visualization,
+            job_id,
+            harmony_job_id,
+            request.plot_types,
+            request.variables,
+            client
+        )
+        
+        return {
+            "success": True,
+            "job_id": job_id,
+            "harmony_job_id": harmony_job_id,
+            "status": "queued",
+            "message": f"Started processing {len(request.plot_types)} visualization types"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Error starting parallel visualization: {str(e)}"
+        }
+
+async def process_parallel_visualization(job_id, harmony_job_id, plot_types, variables, client):
+    """Background task to process visualizations in parallel"""
+    try:
+        # Wait for Harmony processing
+        client.wait_for_processing(harmony_job_id, show_progress=True)
+        
+        # Download results
+        results = client.download_all(harmony_job_id, directory="/tmp", overwrite=True)
+        result_files = [f.result() for f in results]
+        
+        if not result_files:
+            with job_lock:
+                if job_id in job_results:
+                    job_results[job_id]["status"] = "failed"
+                    job_results[job_id]["error"] = "No data files found for the specified parameters"
+            return
+        
+        # Process the first data file for visualization
+        datatree = xr.open_datatree(result_files[0])
+        
+        # Determine variable to plot
+        variable_name = "product/vertical_column"
+        if variables and variables[0]:
+            variable_name = variables[0]
+        
+        # Process all visualizations in parallel
+        process_visualization_job(job_id, datatree, plot_types, variable_name)
+        
+    except Exception as e:
+        print(f"Error in parallel processing: {e}")
+        with job_lock:
+            if job_id in job_results:
+                job_results[job_id]["status"] = "failed"
+                job_results[job_id]["error"] = str(e)
+
+@app.get("/tempo/visualize/status/{job_id}")
+async def get_job_status(
+    job_id: str,
+    token: str = Depends(verify_token)
+):
+    """Get the status of a parallel visualization job"""
+    try:
+        with job_lock:
+            if job_id not in job_results:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Job not found"
+                )
+            
+            job_data = job_results[job_id]
+            
+            return JobStatus(
+                job_id=job_id,
+                status=job_data["status"],
+                progress=job_data["progress"],
+                completed_plots=job_data["completed_plots"],
+                failed_plots=job_data["failed_plots"],
+                results=job_data["results"] if job_data["status"] in ["completed", "processing"] else None,
+                error=job_data["error"]
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting job status: {str(e)}"
+        )
+
+@app.get("/tempo/visualize/results/{job_id}")
+async def get_job_results(
+    job_id: str,
+    token: str = Depends(verify_token)
+):
+    """Get the results of a completed parallel visualization job"""
+    try:
+        with job_lock:
+            if job_id not in job_results:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Job not found"
+                )
+            
+            job_data = job_results[job_id]
+            
+            if job_data["status"] != "completed":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Job not completed. Current status: {job_data['status']}"
+                )
+            
+            return {
+                "success": True,
+                "job_id": job_id,
+                "results": job_data["results"],
+                "completed_plots": job_data["completed_plots"],
+                "failed_plots": job_data["failed_plots"],
+                "message": f"Retrieved {len(job_data['completed_plots'])} completed visualizations"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting job results: {str(e)}"
         )
 
 @app.get("/tempo/visualize/image/{job_id}")
@@ -653,6 +1094,43 @@ async def get_visualization_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving image: {str(e)}"
         )
+
+@app.get("/cache/status")
+async def get_cache_status(token: str = Depends(verify_token)):
+    """Get cache status and statistics"""
+    with cache_lock:
+        current_time = time.time()
+        active_items = sum(1 for item in cache.values() if current_time - item["timestamp"] < CACHE_TTL)
+        expired_items = len(cache) - active_items
+        
+        return {
+            "cache_size": len(cache),
+            "active_items": active_items,
+            "expired_items": expired_items,
+            "max_size": CACHE_MAX_SIZE,
+            "ttl_seconds": CACHE_TTL,
+            "cache_hit_rate": "N/A"  # Could be implemented with hit/miss counters
+        }
+
+@app.post("/cache/clear")
+async def clear_cache(token: str = Depends(verify_token)):
+    """Clear all cached data"""
+    with cache_lock:
+        cache.clear()
+        return {"message": "Cache cleared successfully", "cleared_items": len(cache)}
+
+@app.post("/cache/cleanup")
+async def cleanup_cache(token: str = Depends(verify_token)):
+    """Remove expired items from cache"""
+    with cache_lock:
+        before_count = len(cache)
+        clear_expired_cache()
+        after_count = len(cache)
+        return {
+            "message": "Cache cleanup completed",
+            "removed_items": before_count - after_count,
+            "remaining_items": after_count
+        }
 
 if __name__ == "__main__":
     import uvicorn

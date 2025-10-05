@@ -12,6 +12,12 @@ A modern, secure FastAPI backend for fetching NASA TEMPO data using Harmony-py.
 - 🎨 **Data visualization** with matplotlib and cartopy
 - 🗺️ **Map visualizations** with geographic projections
 - 📈 **Scientific plots** including zonal means and contours
+- 🚀 **Parallel processing** for multiple visualization types
+- ⚡ **Real-time job status** tracking and progress updates
+- 🔄 **Queue management** for handling multiple concurrent requests
+- 🎯 **Optimized endpoints** for single and batch operations
+- 💾 **Smart caching system** for instant response on repeated requests
+- ⚡ **Cache management** with TTL and automatic cleanup
 - 🚀 **Easy deployment** with virtual environment
 
 ## Quick Start
@@ -61,8 +67,45 @@ The API will be available at `http://localhost:8001`
 - `GET /tempo/collections` - Get available data collections
 
 ### Data Visualization
-- `POST /tempo/visualize` - Create visualizations (maps, zonal means, contours) of TEMPO data
-- `GET /tempo/visualize/image/{job_id}` - Get visualization as PNG image (planned)
+- `POST /tempo/visualize` - Create single visualization (maps, zonal means, contours) of TEMPO data
+- `POST /tempo/visualize/all` - Create all three visualization types in one request (optimized)
+- `POST /tempo/visualize/parallel` - Start parallel visualization job with real-time status updates
+- `GET /tempo/visualize/status/{job_id}` - Get job status and progress
+- `GET /tempo/visualize/results/{job_id}` - Get completed job results
+
+### Cache Management
+- `GET /cache/status` - Get cache statistics and status
+- `POST /cache/clear` - Clear all cached data
+- `POST /cache/cleanup` - Remove expired cache entries
+
+## Caching System
+
+The API includes a smart caching system that dramatically improves performance for repeated requests:
+
+### How It Works
+- **Automatic Caching**: All visualization requests are automatically cached based on their parameters
+- **Cache Key Generation**: Unique keys are generated from request parameters (time range, bbox, variable, plot type)
+- **TTL (Time To Live)**: Cached data expires after 1 hour (3600 seconds) by default
+- **Memory Management**: Maximum 100 cached items with automatic cleanup of oldest entries
+- **Thread-Safe**: All cache operations are thread-safe for concurrent requests
+
+### Cache Benefits
+- ⚡ **Instant Response**: Identical requests return immediately from cache
+- 🚀 **Reduced Load**: No need to fetch data from NASA or regenerate visualizations
+- 💾 **Memory Efficient**: Automatic cleanup prevents memory bloat
+- 🔄 **Smart Invalidation**: Expired items are automatically removed
+
+### Cache Management
+```bash
+# Check cache status
+curl -H "Authorization: Bearer your-token" http://localhost:8000/cache/status
+
+# Clear all cache
+curl -X POST -H "Authorization: Bearer your-token" http://localhost:8000/cache/clear
+
+# Clean up expired items
+curl -X POST -H "Authorization: Bearer your-token" http://localhost:8000/cache/cleanup
+```
 
 ## Usage Examples
 
@@ -122,6 +165,36 @@ curl -X POST "http://localhost:8001/tempo/visualize" \
     "plot_type": "contour",
     "variables": ["product/vertical_column"]
   }'
+
+# Create all three visualizations at once (optimized)
+curl -X POST "http://localhost:8001/tempo/visualize/all" \
+  -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_time": "2023-12-30T22:30:00",
+    "end_time": "2023-12-30T22:45:00",
+    "plot_type": "all_three",
+    "variables": ["product/vertical_column"]
+  }'
+
+# Start parallel processing (for real-time updates)
+curl -X POST "http://localhost:8001/tempo/visualize/parallel" \
+  -H "Authorization: Bearer harmony-api-secret-key-change-in-production" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_time": "2023-12-30T22:30:00",
+    "end_time": "2023-12-30T22:45:00",
+    "plot_types": ["map", "zonal_mean", "contour"],
+    "variables": ["product/vertical_column"]
+  }'
+
+# Check job status
+curl "http://localhost:8001/tempo/visualize/status/{job_id}" \
+  -H "Authorization: Bearer harmony-api-secret-key-change-in-production"
+
+# Get completed results
+curl "http://localhost:8001/tempo/visualize/results/{job_id}" \
+  -H "Authorization: Bearer harmony-api-secret-key-change-in-production"
 ```
 
 ## API Documentation

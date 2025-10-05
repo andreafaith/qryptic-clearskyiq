@@ -184,12 +184,12 @@
         <form id="visualizationForm">
             <div class="form-group">
                 <label for="startTime">Start Time:</label>
-                <input type="datetime-local" id="startTime" value="2023-12-30T22:30" required>
+                <input type="datetime-local" id="startTime" value="2023-12-30T22:30" min="2023-01-01T00:00" max="2024-12-31T23:59" required>
             </div>
             
             <div class="form-group">
                 <label for="endTime">End Time:</label>
-                <input type="datetime-local" id="endTime" value="2023-12-30T22:45" required>
+                <input type="datetime-local" id="endTime" value="2023-12-30T22:45" min="2023-01-01T00:00" max="2024-12-31T23:59" required>
             </div>
             
             <div class="form-group">
@@ -200,10 +200,13 @@
             <div class="form-group">
                 <label for="variable">Variable:</label>
                 <select id="variable">
-                    <option value="product/vertical_column">Vertical Column</option>
+                    <option value="product/vertical_column">Vertical Column (Total)</option>
                     <option value="product/vertical_column_troposphere">Vertical Column Troposphere</option>
                     <option value="product/main_data_quality_flag">Data Quality Flag</option>
                 </select>
+                <small style="color: #7f8c8d; font-size: 12px; margin-top: 5px; display: block;">
+                    <span id="variableDescription">Total atmospheric column density (molecules/cm²)</span>
+                </small>
             </div>
             
             <div class="form-group">
@@ -248,6 +251,11 @@
         const API_BASE_URL = 'http://localhost:8000';
         const AUTH_TOKEN = 'bumbumbakudan';
         
+        // Test API connection on page load
+        window.addEventListener('load', () => {
+            testConnection();
+        });
+        
         document.getElementById('visualizationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             await generateVisualization();
@@ -255,6 +263,16 @@
         
         document.getElementById('testBtn').addEventListener('click', async () => {
             await testConnection();
+        });
+        
+        // Update variable description when variable changes
+        document.getElementById('variable').addEventListener('change', (e) => {
+            const descriptions = {
+                'product/vertical_column': 'Total atmospheric column density (molecules/cm²)',
+                'product/vertical_column_troposphere': 'Tropospheric column density (molecules/cm²)',
+                'product/main_data_quality_flag': 'Data quality indicator (0=good, 1=questionable, 2=bad)'
+            };
+            document.getElementById('variableDescription').textContent = descriptions[e.target.value] || '';
         });
         
         async function testConnection() {
@@ -338,6 +356,7 @@
             });
             
             const data = await response.json();
+            console.log('API Response:', data); // Debug logging
             
             if (data.success && data.data && data.data.image_base64) {
                 const plotNames = {
@@ -347,28 +366,40 @@
                 };
                 const plotName = plotNames[data.data.plot_type] || data.data.plot_type;
                 
+                // Check if image data is valid
+                const imgData = data.data.image_base64;
+                console.log('Image data length:', imgData.length);
+                console.log('Image data preview:', imgData.substring(0, 50));
+                
                 resultContent.innerHTML = `
                     <div class="success">
                         ✅ Visualization generated successfully!<br>
                         Plot Type: ${plotName}<br>
                         Variable: ${data.data.variable}<br>
                         Files Processed: ${data.data.files_processed}<br>
-                        Job ID: ${data.data.job_id}
+                        Job ID: ${data.data.job_id}<br>
+                        Image Size: ${Math.round(imgData.length / 1024)} KB
                     </div>
                     <div class="multi-plot-container">
                         <div class="plot-card">
                             <h4>${plotName}</h4>
                             <div class="image-container">
-                                <img src="data:image/png;base64,${data.data.image_base64}" alt="TEMPO Data Visualization">
+                                <img src="data:image/png;base64,${imgData}" 
+                                     alt="TEMPO Data Visualization" 
+                                     onload="console.log('Image loaded successfully')"
+                                     onerror="console.error('Image failed to load')">
                             </div>
                         </div>
                     </div>
                 `;
             } else {
+                console.error('Visualization failed:', data);
                 resultContent.innerHTML = `
                     <div class="error">
                         ❌ Visualization failed<br>
                         Message: ${data.message || 'Unknown error'}<br>
+                        Success: ${data.success}<br>
+                        Data: ${JSON.stringify(data.data || {}, null, 2)}<br>
                         ${data.success === false ? 'Note: This is likely because NASA Earthdata credentials are not configured.' : ''}
                     </div>
                 `;
@@ -433,9 +464,12 @@
                 });
                 
                 const data = await response.json();
+                console.log('All Three API Response:', data); // Debug logging
                 
                 if (data.success && data.data && data.data.visualizations) {
                     const visualizations = data.data.visualizations;
+                    console.log('Visualizations data:', visualizations);
+                    
                     const plotNames = {
                         'map': '🗺️ Map',
                         'zonal_mean': '📈 Zonal Mean', 
@@ -458,13 +492,22 @@
                     
                     Object.entries(visualizations).forEach(([plotType, viz]) => {
                         const plotName = plotNames[plotType] || plotType;
+                        console.log(`Processing ${plotType}:`, viz);
                         
                         if (viz.success && viz.image_base64) {
+                            const imgSize = Math.round(viz.image_base64.length / 1024);
                             plotsHtml += `
                                 <div class="plot-card">
                                     <h4>${plotName}</h4>
                                     <div class="image-container">
-                                        <img src="data:image/png;base64,${viz.image_base64}" alt="${plotName}">
+                                        <img src="data:image/png;base64,${viz.image_base64}" 
+                                             alt="${plotName}" 
+                                             onload="console.log('${plotType} image loaded successfully')"
+                                             onerror="console.error('${plotType} image failed to load')"
+                                             style="max-width: 100%; height: auto;">
+                                        <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                                            Size: ${imgSize} KB
+                                        </div>
                                     </div>
                                 </div>
                             `;
@@ -472,7 +515,11 @@
                             plotsHtml += `
                                 <div class="plot-card" style="border-color: #e74c3c;">
                                     <h4 style="color: #e74c3c;">${plotName} - Failed</h4>
-                                    <div class="error">${viz.error || 'Unknown error'}</div>
+                                    <div class="error">
+                                        ${viz.error || 'Unknown error'}<br>
+                                        Success: ${viz.success}<br>
+                                        Has image data: ${!!viz.image_base64}
+                                    </div>
                                 </div>
                             `;
                         }
