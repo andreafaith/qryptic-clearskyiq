@@ -5,7 +5,7 @@ export default function HelpContent() {
         <h3 className="text-2xl font-bold mb-6 text-[var(--neon-yellow)]">What is TEMPO?</h3>
         <div className="prose prose-invert max-w-none">
           <p className="text-lg leading-relaxed mb-4">
-            TEMPO (Tropospheric Emissions: Monitoring of Pollution) is NASA's first space-based instrument 
+            TEMPO (Tropospheric Emissions: Monitoring of Pollution) is NASA&apos;s first space-based instrument 
             designed to monitor air quality across North America. It provides hourly measurements of 
             atmospheric pollutants including nitrogen dioxide, ozone, and other trace gases.
           </p>
@@ -73,8 +73,8 @@ export default function HelpContent() {
         <h3 className="text-2xl font-bold mb-6 text-[var(--neon-yellow)]">Data Sources</h3>
         <div className="space-y-4">
           <p className="text-white/80">
-            This tool uses data from NASA's TEMPO mission, processed through the Harmony cloud services platform. 
-            The data is freely available through NASA's Earthdata system.
+            This tool uses data from NASA&apos;s TEMPO mission, processed through the Harmony cloud services platform. 
+            The data is freely available through NASA&apos;s Earthdata system.
           </p>
           <div className="flex flex-wrap gap-4">
             <a 

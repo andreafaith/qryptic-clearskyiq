@@ -10,7 +10,7 @@ export default function EmptyState({ onStartVisualizing, onLearnMore }: EmptySta
         <div className="text-6xl mb-6">🌍</div>
         <h3 className="text-2xl font-semibold mb-4">Welcome to TEMPO Data Visualization</h3>
         <p className="text-white/70 text-lg mb-6 max-w-2xl mx-auto">
-          Explore atmospheric pollution data from NASA's TEMPO satellite. 
+          Explore atmospheric pollution data from NASA&apos;s TEMPO satellite. 
           Generate visualizations to understand air quality patterns across North America.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
