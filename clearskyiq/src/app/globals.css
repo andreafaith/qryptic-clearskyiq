@@ -29,6 +29,10 @@
     @apply bg-[var(--background)] text-[var(--foreground)] font-sans;
     font-family: var(--font-fira-sans), sans-serif;
   }
+
+  .container {
+    @apply max-w-6xl md:w-[1440px] mx-auto;
+  }
 }
 
 /* Optional theme section (for Tailwind’s @theme inline syntax) */

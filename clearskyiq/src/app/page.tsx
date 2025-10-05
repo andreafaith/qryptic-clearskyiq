@@ -1,9 +1,10 @@
 "use client";
 import Image from "next/image";
+import TempoVisualization from "./components/TempoVisualization";
 
 export default function Home() {
   return (
-    <div>
+    <div className="container">
       {/* WELCOME SECTION */}
       <section className="w-full bg-[var(--deep-blue)] text-white text-center py-20">
         <div className="max-w-4xl mx-auto px-6">
@@ -86,6 +87,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* NASA TEMPO DATA VISUALIZATION SECTION */}
+      <TempoVisualization />
 
       {/* MEET THE TEAM SECTION */}
       <section className="w-full bg-[var(--blue-yonder)] text-white py-20 px-6">
