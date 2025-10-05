@@ -3,10 +3,42 @@ import Image from "next/image";
 import TempoVisualization from "./components/TempoVisualization";
 
 export default function Home() {
+  const exploreItems = [
+    {
+      id: 1,
+      title: "Air Quality Index",
+      image: "/aqi.png",
+    },
+    {
+      id: 2,
+      title: "Pollution Heatmap",
+      image: "/phm.png",
+    },
+    {
+      id: 3,
+      title: "Wildfire Smoke & Dust Storm Alert",
+      image: "/wildfire.png",
+    },
+    {
+      id: 4,
+      title: "Dashboard",
+      image: "/dashboard.png",
+    },
+    {
+      id: 5,
+      title: "Personalized Health Recommendations",
+      image: "/healthrecoms.png",
+    },
+    {
+      id: 6,
+      title: "Anomaly Detection & Early Warnings",
+      image: "/anomaly.png",
+    },
+  ];
   return (
     <div className="container">
       {/* WELCOME SECTION */}
-      <section className="w-full bg-[var(--deep-blue)] text-white text-center py-20">
+      <section className="w-full bg-[var(--blue-yonder)] text-white text-center py-20">
         <div className="max-w-4xl mx-auto px-6">
           <h1 className="text-3xl md:text-4xl font-medium opacity-80">
             Welcome to
@@ -44,8 +76,8 @@ export default function Home() {
 
           {/* RIGHT SIDE — Image */}
           <div className="flex-1 flex justify-center">
-            <Image
-              src="/clearsky-preview.png"
+            <img
+              src="https://static.vecteezy.com/system/resources/previews/010/282/151/large_2x/clear-sky-pictures-bright-sky-background-cloudless-sky-free-photo.jpeg"
               alt="Illustration of ClearSkyIQ data visualization"
               width={500}
               height={400}
@@ -56,31 +88,37 @@ export default function Home() {
       </section>
 
       {/* EXPLORE SECTION */}
-      <section className="w-full bg-[var(--deep-blue)] text-white py-20 px-6">
+      <section className="w-full bg-[var(--blue-yonder)] text-white py-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           {/* Title */}
           <h2 className="text-4xl font-bold mb-12 tracking-tight">Explore</h2>
 
-          {/* 3x2 GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="border border-white rounded-2xl flex items-center justify-center h-56 transition-transform hover:scale-105"
-              >
-                <Image
-                  src={`/explore-${i}.png`}
-                  alt={`Explore item ${i}`}
-                  width={160}
-                  height={160}
-                  className="object-contain rounded-xl"
-                />
+         
+        {/* 3x2 GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
+          {exploreItems.map((item) => (
+            <div
+              key={item.id}
+              className="relative overflow-hidden flex items-center justify-center h-56 group transition-transform hover:scale-105"
+            >
+              <Image
+                src={item.image}
+                alt={item.title}
+                width={200}
+                height={200}
+                className="object-contain"
+              />
+
+              {/* Overlay with Title */}
+              <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                <h3 className="text-lg font-semibold">{item.title}</h3>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
 
           {/* CTA BOX */}
-          <div className="border border-white rounded-xl py-6 px-8 inline-block">
+          <div className="bg-[var(--deep-blue)] border border-white rounded-xl py-6 px-8 inline-block">
             <p className="text-lg font-medium">
               Explore the Machine Learning Model Used Here
             </p>
