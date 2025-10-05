@@ -5,43 +5,10 @@ import TempoVisualization from "./components/TempoVisualization";
 
 export default function Home() {
   return (
-    <div className="container">
-      <br /><br /><br /><br /><br />
+    <div className="container py-50">
+      
       <Explore />
 
-      {/* ABOUT SECTION */}
-      <section className="w-full text-white">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 py-20 px-6">
-          {/* LEFT SIDE — Text */}
-          <div className="flex-1 space-y-6">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              What is ClearSkyIQ?
-            </h2>
-            <p className="text-base md:text-lg opacity-90 leading-relaxed">
-              ClearSkyIQ is a data-driven platform designed to empower researchers,
-              students, and innovators with insights about atmospheric and satellite
-              conditions. Our mission is to make complex space and environmental data
-              accessible, actionable, and visually engaging for everyone.
-              <br />
-              <br />
-              Whether you’re analyzing air quality trends or contributing to global
-              sustainability goals, ClearSkyIQ helps you see the bigger picture — one
-              dataset at a time.
-            </p>
-          </div>
-
-          {/* RIGHT SIDE — Image */}
-          <div className="flex-1 flex justify-center">
-            <img
-              src="https://static.vecteezy.com/system/resources/previews/010/282/151/large_2x/clear-sky-pictures-bright-sky-background-cloudless-sky-free-photo.jpeg"
-              alt="Illustration of ClearSkyIQ data visualization"
-              width={500}
-              height={400}
-              className="rounded-2xl shadow-lg object-cover"
-            />
-          </div>
-        </div>
-      </section>
 
       {/* NASA TEMPO DATA VISUALIZATION SECTION */}
       <TempoVisualization />

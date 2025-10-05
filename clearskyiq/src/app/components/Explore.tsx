@@ -58,7 +58,7 @@ export default function Explore() {
   return (
     <section className="w-full text-white py-20 px-6 relative overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(234,254,7,0.1)_0%,transparent_70%)]"></div>
+      <div className="absolute inset-0 "></div>
 
       <div className="max-w-7xl mx-auto text-center relative z-10">
         {/* Section Title */}
@@ -98,7 +98,7 @@ export default function Explore() {
               {/* Button */}
               <div className="mt-auto flex justify-center">
                 <span className="uppercase text-sm flex items-center gap-2 bg-[var(--neon-blue)] text-white font-semibold px-6 py-3  shadow-md hover:scale-105 transition-all duration-300">
-                  Explore
+                  Learn More
                 </span>
               </div>
             </Link>
