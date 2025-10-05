@@ -54,8 +54,23 @@ export default function TempoVisualization() {
   const [retryCount, setRetryCount] = useState(0);
   const [isPreloading, setIsPreloading] = useState(true);
   const [activeTab, setActiveTab] = useState<'explore' | 'visualize' | 'help'>('explore');
-  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
-  const [jobStatus, setJobStatus] = useState<any>(null);
+  const [, setCurrentJobId] = useState<string | null>(null);
+  interface JobStatus {
+    status: string;
+    progress: number;
+    completed_plots: string[];
+    failed_plots: string[];
+    results?: Record<string, unknown>;
+    error?: string;
+  }
+
+  interface PlotData {
+    success: boolean;
+    image_base64?: string;
+    error?: string;
+  }
+
+  const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
 
   const [formData, setFormData] = useState({
     startTime: '2023-12-30T22:30',
@@ -156,7 +171,7 @@ export default function TempoVisualization() {
     };
 
     preloadData();
-  }, []); // Empty dependency array means this runs once on mount
+  }, [formData.startTime, formData.endTime, formData.variable]); // Include dependencies
 
   const startParallelProcessing = async (plotTypes: string[]) => {
     try {
@@ -170,7 +185,7 @@ export default function TempoVisualization() {
         bboxArray = bboxParts;
       }
 
-      const requestData = {
+      const requestData: Record<string, unknown> = {
         start_time: formData.startTime + ':00',
         end_time: formData.endTime + ':00',
         plot_types: plotTypes,
@@ -179,7 +194,7 @@ export default function TempoVisualization() {
       };
 
       if (bboxArray) {
-        (requestData as any).bbox = bboxArray;
+        requestData.bbox = bboxArray;
       }
 
       const response = await fetch('/api/tempo/visualize/parallel', {
@@ -263,7 +278,7 @@ export default function TempoVisualization() {
         // Use the optimized endpoint for all three visualizations
         setLoadingMessage('Generating all three visualizations...');
         
-        const requestData: any = {
+        const requestData: Record<string, unknown> = {
           start_time: formData.startTime + ':00',
           end_time: formData.endTime + ':00',
           plot_type: 'all_three',
@@ -393,7 +408,7 @@ export default function TempoVisualization() {
     setError(null);
     setRetryCount(prev => prev + 1);
     if (result) {
-      handleSubmit(new Event('submit') as any);
+      handleSubmit(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>);
     } else {
       testConnection();
     }
@@ -409,7 +424,7 @@ export default function TempoVisualization() {
             NASA TEMPO Data Visualization
           </h2>
           <p className="text-xl text-white/80 max-w-3xl mx-auto">
-            Explore atmospheric pollution data from NASA's TEMPO satellite mission. 
+            Explore atmospheric pollution data from NASA&apos;s TEMPO satellite mission. 
             Generate interactive visualizations to understand air quality patterns across North America.
           </p>
         </div>
@@ -493,7 +508,7 @@ export default function TempoVisualization() {
                     </div>
 
                     <div className="grid gap-8">
-                      {Object.entries(result.data.data.visualizations || {}).map(([plotType, plotData]: [string, any]) => (
+                      {Object.entries(result.data.data.visualizations || {}).map(([plotType, plotData]: [string, PlotData]) => (
                         <VisualizationCard
                           key={plotType}
                           plotType={plotType}
@@ -583,7 +598,7 @@ export default function TempoVisualization() {
                     </div>
 
                     <div className="grid gap-8">
-                      {Object.entries(result.data.data.visualizations || {}).map(([plotType, plotData]: [string, any]) => (
+                      {Object.entries(result.data.data.visualizations || {}).map(([plotType, plotData]: [string, PlotData]) => (
                         <VisualizationCard
                           key={plotType}
                           plotType={plotType}
