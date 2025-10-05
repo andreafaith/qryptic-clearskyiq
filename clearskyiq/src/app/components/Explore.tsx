@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Explore() {
   const exploreItems = [
@@ -10,6 +11,7 @@ export default function Explore() {
       description:
         "Interactive time-lapse visualization showing AQI evolution across hours or days, with color gradients to represent pollution intensity changes over time.",
       image: "/aqi.png",
+      href: "/explore/air-quality-timeline",
     },
     {
       id: 2,
@@ -17,6 +19,7 @@ export default function Explore() {
       description:
         "A 3D globe that visualizes pollutant dispersion vertically through the atmosphere using NASA CALIPSO and MERRA-2 aerosol data.",
       image: "/phm.png",
+      href: "/explore/3d-layer-view",
     },
     {
       id: 3,
@@ -24,6 +27,7 @@ export default function Explore() {
       description:
         "Side-by-side visualization comparing AQI, temperature, and pollutant breakdowns across multiple cities or regions.",
       image: "/dashboard.png",
+      href: "/explore/city-dashboard",
     },
     {
       id: 4,
@@ -31,6 +35,7 @@ export default function Explore() {
       description:
         "A radial chart showing pollutant composition (PM2.5, NO₂, O₃, CO) as percentage slices — helpful for quickly assessing pollutant dominance.",
       image: "/healthrecoms.png",
+      href: "/explore/composition-wheel",
     },
     {
       id: 5,
@@ -38,6 +43,7 @@ export default function Explore() {
       description:
         "A matrix heatmap displaying relationships between pollutants, meteorological conditions (wind, humidity), and AQI variation.",
       image: "/wildfire.png",
+      href: "/explore/correlation-heatmap",
     },
     {
       id: 6,
@@ -45,6 +51,7 @@ export default function Explore() {
       description:
         "Visualize long-term trends and seasonal pollution cycles with smooth animation transitions and time controls.",
       image: "/anomaly.png",
+      href: "/explore/historical-trends",
     },
   ];
 
@@ -53,17 +60,18 @@ export default function Explore() {
       {/* Background Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(234,254,7,0.1)_0%,transparent_70%)]"></div>
 
-      <div className="max-w-6xl mx-auto text-center relative z-10">
+      <div className="max-w-7xl mx-auto text-center relative z-10">
         {/* Section Title */}
-        <h2 className="text-4xl font-extrabold mb-12 tracking-tight uppercase text-[var(--neon-yellow)] drop-shadow-[0_0_10px_rgba(234,254,7,0.8)]">
-          Explore
+        <h2 className="text-3xl font-extrabold mb-12 tracking-tight uppercase text-[var(--neon-yellow)]">
+          Explore the Machine Learning Models
         </h2>
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
           {exploreItems.map((item) => (
-            <div
+            <Link
               key={item.id}
+              href={item.href}
               className="relative group bg-[#0f1f47] border border-[var(--neon-yellow)]/20 rounded-2xl overflow-hidden p-6 flex flex-col items-center text-center shadow-[0_0_20px_rgba(0,0,0,0.4)] hover:border-[var(--neon-yellow)]/70 hover:shadow-[0_0_25px_rgba(234,254,7,0.4)] transition-all duration-300"
             >
               {/* Image */}
@@ -78,7 +86,7 @@ export default function Explore() {
               </div>
 
               {/* Title */}
-              <h3 className="text-xl font-bold mb-3 text-[var(--neon-yellow)] group-hover:text-white transition-colors">
+              <h3 className="text-xl uppercase font-bold mb-3 text-[var(--neon-yellow)]">
                 {item.title}
               </h3>
 
@@ -88,18 +96,13 @@ export default function Explore() {
               </p>
 
               {/* Button */}
-              <button className="mt-auto flex items-center gap-2 bg-[var(--neon-blue)] text-white font-semibold px-6 py-3 shadow- hover:scale-105 transition-all duration-300">
-                Learn More
-              </button>
-            </div>
+              <div className="mt-auto flex justify-center">
+                <span className="uppercase text-sm flex items-center gap-2 bg-[var(--neon-blue)] text-white font-semibold px-6 py-3  shadow-md hover:scale-105 transition-all duration-300">
+                  Explore
+                </span>
+              </div>
+            </Link>
           ))}
-        </div>
-
-        {/* CTA BOX */}
-        <div className="bg-[#142b5f]/80 border border-[var(--neon-yellow)]/40 rounded-xl py-6 px-8 inline-block shadow-[0_0_25px_rgba(234,254,7,0.2)] hover:shadow-[0_0_40px_rgba(234,254,7,0.3)] transition-shadow duration-300">
-          <p className="text-lg font-medium text-[var(--neon-yellow)]">
-            Explore the Machine Learning Model Powering These Features
-          </p>
         </div>
       </div>
     </section>
