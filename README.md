@@ -269,12 +269,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **qryptic** - NASA Space Apps Challenge 2025
 
-- **Andrea Faith Alimorong** - Engineer
-- **Loyd Martin Vendiola** - Engineer  
-- **Harold Martin Patacsil** - Engineer
-- **Scheidj Bleu Villados** - Engineer
+- **Andrea Faith Alimorong** - Lead Engineer
+- **Loyd Martin Vendiola** - Cloud Engineer  
+- **Harold Martin Patacsil** - Frontend Engineer
+- **Scheidj Bleu Villados** - Backend Engineer
 - **Francheska Ivonne Ojastro** - UI Designer
-- **Jean Carlo San Juan** - Engineer
 
 ## Links
 
