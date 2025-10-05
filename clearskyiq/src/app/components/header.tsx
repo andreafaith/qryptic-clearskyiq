@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function Header() {
   return (
-    <header className="w-full bg-[var(--deep-blue)] text-white">
+    <header className="w-full text-white">
       <div className="max-w-6xl mx-auto flex items-center justify-between p-4">
         {/* Logo */}
         <div className="flex items-center space-x-2">
@@ -21,7 +21,7 @@ export default function Header() {
         </div>
 
         {/* Nav */}
-        <nav className="flex space-x-6 text-sm md:text-base">
+        <nav className="flex space-x-6 text-md md:text-base font-medium">
           <a href="#" className="hover:text-[var(--neon-yellow)] transition">
             home
           </a>

@@ -1,60 +1,65 @@
 "use client";
 import Image from "next/image";
 import TempoVisualization from "./components/TempoVisualization";
+import Explore from "./components/Explore";
 
 export default function Home() {
   const exploreItems = [
     {
       id: 1,
-      title: "Air Quality Index",
-      image: "/aqi.png",
+      title: "Air Quality Analysis",
+      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop&crop=center"
     },
     {
       id: 2,
-      title: "Pollution Heatmap",
-      image: "/phm.png",
+      title: "Satellite Data",
+      image: "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=200&h=200&fit=crop&crop=center"
     },
     {
       id: 3,
-      title: "Wildfire Smoke & Dust Storm Alert",
-      image: "/wildfire.png",
+      title: "Weather Patterns",
+      image: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=200&h=200&fit=crop&crop=center"
     },
     {
       id: 4,
-      title: "Dashboard",
-      image: "/dashboard.png",
+      title: "Climate Trends",
+      image: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=200&h=200&fit=crop&crop=center"
     },
     {
       id: 5,
-      title: "Personalized Health Recommendations",
-      image: "/healthrecoms.png",
+      title: "Atmospheric Data",
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop&crop=center"
     },
     {
       id: 6,
-      title: "Anomaly Detection & Early Warnings",
-      image: "/anomaly.png",
-    },
+      title: "Environmental Insights",
+      image: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=200&h=200&fit=crop&crop=center"
+    }
   ];
+
   return (
-    <div className="container">
-      {/* WELCOME SECTION */}
-      <section className="w-full bg-[var(--blue-yonder)] text-white text-center py-20">
-        <div className="max-w-4xl mx-auto px-6">
-          <h1 className="text-3xl md:text-4xl font-medium opacity-80">
-            Welcome to
-          </h1>
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-[var(--neon-yellow)] mt-2">
-            ClearSkyIQ
-          </h1>
-          <p className="text-base md:text-lg opacity-90 mt-6 leading-relaxed">
-            A space-data intelligence platform empowering researchers and
-            innovators to visualize, analyze, and understand our skies.
-          </p>
-        </div>
-      </section>
+    <>
+      <div className="container">
+        {/* WELCOME SECTION */}
+        <section className="w-full bg-[var(--blue-yonder)] text-white text-center py-20">
+          <div className="max-w-4xl mx-auto px-6">
+            <h1 className="text-3xl md:text-4xl font-medium opacity-80">
+              Welcome to
+            </h1>
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-[var(--neon-yellow)] mt-2">
+              ClearSkyIQ
+            </h1>
+            <p className="text-base md:text-lg opacity-90 mt-6 leading-relaxed">
+              A space-data intelligence platform empowering researchers and
+              innovators to visualize, analyze, and understand our skies.
+            </p>
+          </div>
+        </section>
+        <div>
+      <Explore />
 
       {/* ABOUT SECTION */}
-      <section className="w-full bg-[var(--blue-yonder)] text-white">
+      <section className="w-full text-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 py-20 px-6">
           {/* LEFT SIDE — Text */}
           <div className="flex-1 space-y-6">
@@ -130,7 +135,7 @@ export default function Home() {
       <TempoVisualization />
 
       {/* MEET THE TEAM SECTION */}
-      <section className="w-full bg-[var(--blue-yonder)] text-white py-20 px-6">
+      <section className="w-full text-white py-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           {/* Title */}
           <h2 className="text-4xl font-bold mb-12 tracking-tight">
@@ -142,32 +147,32 @@ export default function Home() {
             {[
               {
                 name: "Andrea Faith Alimorong",
-                position: "A",
+                position: "Engineer",
                 img: "/team-1.png",
               },
               {
                 name: "Loyd Martin Vendiola",
-                position: "B",
+                position: "Engineer",
                 img: "/team-2.png",
               },
               {
                 name: "Harold Martin Patacsil",
-                position: "C",
+                position: "Engineer",
                 img: "/team-3.png",
               },
               {
                 name: "Scheidj Bleu Villados",
-                position: "D",
+                position: "Engineer",
                 img: "/team-4.png",
               },
               {
                 name: "Francheska Ivonne Ojastro",
-                position: "E",
+                position: "UI Designer",
                 img: "/team-5.png",
               },
               {
                 name: "Jean Carlo San Juan",
-                position: "F",
+                position: "Engineer",
                 img: "/team-6.png",
               },
             ].map((member, i) => (
@@ -189,6 +194,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
