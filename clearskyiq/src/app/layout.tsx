@@ -27,7 +27,7 @@ export default function RootLayout({
         className={`${firaSans.variable} font-sans antialiased flex flex-col min-h-screen`}
       >
         <Header />
-        <main className="flex-grow bg-[var(--blue-yonder)] text-white flex items-center justify-center">
+        <main className="flex-grow bg-[var(--deep-blue)] text-white flex items-center justify-center">
           {children}
         </main>
         <Footer />

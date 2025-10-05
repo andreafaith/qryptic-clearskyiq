@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[var(--electric-blue)] text-white border-t border-white/10">
+    <footer className="w-full bg-black text-white border-t border-white/10">
       <div className="max-w-7xl mx-auto px-8 py-16 grid grid-cols-1 md:grid-cols-3 gap-12">
         {/* Left: Logo + tagline */}
         <div className="flex flex-col items-start gap-4">
