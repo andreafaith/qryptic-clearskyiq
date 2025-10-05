@@ -26,32 +26,32 @@ export default function Home() {
             {[
               {
                 name: "Andrea Faith Alimorong",
-                position: "A",
+                position: "Engineer",
                 img: "/team-1.png",
               },
               {
                 name: "Loyd Martin Vendiola",
-                position: "B",
+                position: "Engineer",
                 img: "/team-2.png",
               },
               {
                 name: "Harold Martin Patacsil",
-                position: "C",
+                position: "Engineer",
                 img: "/team-3.png",
               },
               {
                 name: "Scheidj Bleu Villados",
-                position: "D",
+                position: "Engineer",
                 img: "/team-4.png",
               },
               {
                 name: "Francheska Ivonne Ojastro",
-                position: "E",
+                position: "UI Designer",
                 img: "/team-5.png",
               },
               {
                 name: "Jean Carlo San Juan",
-                position: "F",
+                position: "Engineer",
                 img: "/team-6.png",
               },
             ].map((member, i) => (
