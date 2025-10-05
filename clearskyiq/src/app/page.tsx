@@ -5,6 +5,7 @@ import Explore from "./components/Explore";
 export default function Home() {
   return (
     <div>
+      <br /><br /><br /><br /><br />
       <Explore />
 
       {/* ABOUT SECTION */}

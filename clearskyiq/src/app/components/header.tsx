@@ -1,13 +1,33 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function Header() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="w-full text-white">
-      <div className="max-w-6xl mx-auto flex items-center justify-between p-4">
+    <header
+      className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 
+        w-[40%] lg:w-[30%] transition-all duration-500 
+        ${
+          scrolled
+            ? "bg-black/50 backdrop-blur-md border border-white/10 shadow-[0_0_25px_rgba(234,254,7,0.2)]"
+            : "bg-black/40 backdrop-blur-sm border border-white/5"
+        } 
+        rounded-2xl`}
+    >
+      <div className="flex items-center justify-between px-6 py-3">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <Image
             src="/logo.png"
             alt="ClearSkyIQ logo"
@@ -15,21 +35,27 @@ export default function Header() {
             height={80}
             className="rounded"
           />
-          {/* <span className="font-semibold text-lg tracking-wide">
-            ClearSkyIQ
-          </span> */}
         </div>
 
         {/* Nav */}
-        <nav className="flex space-x-6 text-md md:text-base font-medium">
-          <a href="#" className="hover:text-[var(--neon-yellow)] transition">
-            home
+        <nav className="flex space-x-6 text-sm md:text-base font-medium  tracking-wide">
+          <a
+            href="#"
+            className="text-white hover:text-[var(--neon-yellow)] transition-colors duration-300"
+          >
+            Home
           </a>
-          <a href="#" className="hover:text-[var(--neon-yellow)] transition">
-            learn more
+          <a
+            href="#"
+            className="text-white hover:text-[var(--neon-yellow)] transition-colors duration-300"
+          >
+            Learn More
           </a>
-          <a href="#" className="hover:text-[var(--neon-yellow)] transition">
-            about us
+          <a
+            href="#"
+            className="text-white hover:text-[var(--neon-yellow)] transition-colors duration-300"
+          >
+            About Us
           </a>
         </nav>
       </div>
