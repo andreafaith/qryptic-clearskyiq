@@ -420,7 +420,7 @@ export default function TempoVisualization() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-[var(--neon-yellow)]">
             NASA TEMPO Data Visualization
           </h2>
           <p className="text-xl text-white/80 max-w-3xl mx-auto">
