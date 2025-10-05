@@ -11,8 +11,8 @@ export default function Header() {
           <Image
             src="/logo.png"
             alt="ClearSkyIQ logo"
-            width={40}
-            height={40}
+            width={80}
+            height={80}
             className="rounded"
           />
           {/* <span className="font-semibold text-lg tracking-wide">
