@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmony API - TEMPO Data Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        .image-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .error {
+            color: #e74c3c;
+            background-color: #fadbd8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #27ae60;
+            background-color: #d5f4e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+        }
+        .plot-types {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .plot-type {
+            flex: 1;
+            min-width: 150px;
+        }
+        .plot-type:last-child {
+            background-color: #e8f4fd;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .plot-type:last-child input[type="radio"] {
+            margin-right: 5px;
+        }
+        .plot-type:last-child label {
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .multi-plot-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .plot-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .plot-card h4 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+            font-size: 18px;
+        }
+        .plot-card.loading {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        .plot-card.loading h4 {
+            color: #3498db;
+        }
+        .plot-card.loading .image-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #bdc3c7;
+        }
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Harmony API - NASA TEMPO Data Visualization</h1>
+        
+        <form id="visualizationForm">
+            <div class="form-group">
+                <label for="startTime">Start Time:</label>
+                <input type="datetime-local" id="startTime" value="2023-12-30T22:30" min="2023-01-01T00:00" max="2024-12-31T23:59" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="endTime">End Time:</label>
+                <input type="datetime-local" id="endTime" value="2023-12-30T22:45" min="2023-01-01T00:00" max="2024-12-31T23:59" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="bbox">Bounding Box (optional):</label>
+                <input type="text" id="bbox" placeholder="west, south, east, north (e.g., -115, 35, -95, 45)">
+            </div>
+            
+            <div class="form-group">
+                <label for="variable">Variable:</label>
+                <select id="variable">
+                    <option value="product/vertical_column">Vertical Column (Total)</option>
+                    <option value="product/vertical_column_troposphere">Vertical Column Troposphere</option>
+                    <option value="product/main_data_quality_flag">Data Quality Flag</option>
+                </select>
+                <small style="color: #7f8c8d; font-size: 12px; margin-top: 5px; display: block;">
+                    <span id="variableDescription">Total atmospheric column density (molecules/cm²)</span>
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label>Plot Type:</label>
+                <div class="plot-types">
+                    <div class="plot-type">
+                        <input type="radio" id="map" name="plotType" value="map" checked>
+                        <label for="map">🗺️ Map</label>
+                    </div>
+                    <div class="plot-type">
+                        <input type="radio" id="zonal_mean" name="plotType" value="zonal_mean">
+                        <label for="zonal_mean">📈 Zonal Mean</label>
+                    </div>
+                    <div class="plot-type">
+                        <input type="radio" id="contour" name="plotType" value="contour">
+                        <label for="contour">🌊 Contour</label>
+                    </div>
+                    <div class="plot-type">
+                        <input type="radio" id="all_three" name="plotType" value="all_three">
+                        <label for="all_three">🎨 All Three</label>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" id="submitBtn">Generate Visualization</button>
+            <button type="button" id="testBtn">Test API Connection</button>
+        </form>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>Result:</h3>
+            <div id="resultContent">
+                <div class="empty-state">
+                    <h3>🎨 Ready to Visualize</h3>
+                    <p>Select your parameters and click "Generate Visualization" to create beautiful TEMPO data visualizations.</p>
+                    <p>Choose "All Three" to see map, zonal mean, and contour plots side by side!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        const AUTH_TOKEN = 'bumbumbakudan';
+        
+        // Test API connection on page load
+        window.addEventListener('load', () => {
+            testConnection();
+        });
+        
+        document.getElementById('visualizationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await generateVisualization();
+        });
+        
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            await testConnection();
+        });
+        
+        // Update variable description when variable changes
+        document.getElementById('variable').addEventListener('change', (e) => {
+            const descriptions = {
+                'product/vertical_column': 'Total atmospheric column density (molecules/cm²)',
+                'product/vertical_column_troposphere': 'Tropospheric column density (molecules/cm²)',
+                'product/main_data_quality_flag': 'Data quality indicator (0=good, 1=questionable, 2=bad)'
+            };
+            document.getElementById('variableDescription').textContent = descriptions[e.target.value] || '';
+        });
+        
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.innerHTML = '<div class="loading">Testing API connection...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultContent.innerHTML = `
+                        <div class="success">
+                            ✅ API is running!<br>
+                            Status: ${data.status}<br>
+                            Version: ${data.version}<br>
+                            Timestamp: ${data.timestamp}
+                        </div>
+                    `;
+                } else {
+                    resultContent.innerHTML = `<div class="error">❌ API Error: ${data.detail || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultContent.innerHTML = `<div class="error">❌ Connection Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function generateVisualization() {
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            resultDiv.style.display = 'block';
+            resultContent.innerHTML = '<div class="loading">Generating visualization... This may take a few minutes.</div>';
+            submitBtn.disabled = true;
+            
+            try {
+                const selectedPlotType = document.querySelector('input[name="plotType"]:checked').value;
+                
+                // If "all_three" is selected, generate all three plot types
+                if (selectedPlotType === 'all_three') {
+                    await generateAllThreeVisualizations(resultContent);
+                } else {
+                    await generateSingleVisualization(resultContent, selectedPlotType);
+                }
+            } catch (error) {
+                resultContent.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+        
+        async function generateSingleVisualization(resultContent, plotType) {
+            const formData = {
+                start_time: document.getElementById('startTime').value + ':00',
+                end_time: document.getElementById('endTime').value + ':00',
+                plot_type: plotType,
+                variables: [document.getElementById('variable').value],
+                collection_id: 'C2930730944-LARC_CLOUD'
+            };
+            
+            // Add bounding box if provided
+            const bboxInput = document.getElementById('bbox').value.trim();
+            if (bboxInput) {
+                const bbox = bboxInput.split(',').map(x => parseFloat(x.trim()));
+                if (bbox.length === 4) {
+                    formData.bbox = bbox;
+                }
+            }
+            
+            const response = await fetch(`${API_BASE_URL}/tempo/visualize`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${AUTH_TOKEN}`
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            console.log('API Response:', data); // Debug logging
+            
+            if (data.success && data.data && data.data.image_base64) {
+                const plotNames = {
+                    'map': '🗺️ Map',
+                    'zonal_mean': '📈 Zonal Mean',
+                    'contour': '🌊 Contour'
+                };
+                const plotName = plotNames[data.data.plot_type] || data.data.plot_type;
+                
+                // Check if image data is valid
+                const imgData = data.data.image_base64;
+                console.log('Image data length:', imgData.length);
+                console.log('Image data preview:', imgData.substring(0, 50));
+                
+                resultContent.innerHTML = `
+                    <div class="success">
+                        ✅ Visualization generated successfully!<br>
+                        Plot Type: ${plotName}<br>
+                        Variable: ${data.data.variable}<br>
+                        Files Processed: ${data.data.files_processed}<br>
+                        Job ID: ${data.data.job_id}<br>
+                        Image Size: ${Math.round(imgData.length / 1024)} KB
+                    </div>
+                    <div class="multi-plot-container">
+                        <div class="plot-card">
+                            <h4>${plotName}</h4>
+                            <div class="image-container">
+                                <img src="data:image/png;base64,${imgData}" 
+                                     alt="TEMPO Data Visualization" 
+                                     onload="console.log('Image loaded successfully')"
+                                     onerror="console.error('Image failed to load')">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                console.error('Visualization failed:', data);
+                resultContent.innerHTML = `
+                    <div class="error">
+                        ❌ Visualization failed<br>
+                        Message: ${data.message || 'Unknown error'}<br>
+                        Success: ${data.success}<br>
+                        Data: ${JSON.stringify(data.data || {}, null, 2)}<br>
+                        ${data.success === false ? 'Note: This is likely because NASA Earthdata credentials are not configured.' : ''}
+                    </div>
+                `;
+            }
+        }
+        
+        async function generateAllThreeVisualizations(resultContent) {
+            // Show initial loading state
+            resultContent.innerHTML = `
+                <div class="loading">🚀 Using optimized endpoint - fetching data once and generating all visualizations... This should be much faster!</div>
+                <div class="multi-plot-container">
+                    <div class="plot-card loading">
+                        <h4>🗺️ Map</h4>
+                        <div class="image-container">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-left: 15px;">Generating map visualization...</div>
+                        </div>
+                    </div>
+                    <div class="plot-card loading">
+                        <h4>📈 Zonal Mean</h4>
+                        <div class="image-container">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-left: 15px;">Generating zonal mean plot...</div>
+                        </div>
+                    </div>
+                    <div class="plot-card loading">
+                        <h4>🌊 Contour</h4>
+                        <div class="image-container">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-left: 15px;">Generating contour plot...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const formData = {
+                    start_time: document.getElementById('startTime').value + ':00',
+                    end_time: document.getElementById('endTime').value + ':00',
+                    plot_type: 'all_three', // This will be ignored by the optimized endpoint
+                    variables: [document.getElementById('variable').value],
+                    collection_id: 'C2930730944-LARC_CLOUD'
+                };
+                
+                // Add bounding box if provided
+                const bboxInput = document.getElementById('bbox').value.trim();
+                if (bboxInput) {
+                    const bbox = bboxInput.split(',').map(x => parseFloat(x.trim()));
+                    if (bbox.length === 4) {
+                        formData.bbox = bbox;
+                    }
+                }
+                
+                // Use the optimized endpoint
+                const response = await fetch(`${API_BASE_URL}/tempo/visualize/all`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AUTH_TOKEN}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                console.log('All Three API Response:', data); // Debug logging
+                
+                if (data.success && data.data && data.data.visualizations) {
+                    const visualizations = data.data.visualizations;
+                    console.log('Visualizations data:', visualizations);
+                    
+                    const plotNames = {
+                        'map': '🗺️ Map',
+                        'zonal_mean': '📈 Zonal Mean', 
+                        'contour': '🌊 Contour'
+                    };
+                    
+                    // Update the header with success info
+                    const headerHtml = `
+                        <div class="success">
+                            ✅ All visualizations completed!<br>
+                            Success: ${data.data.success_count}/${data.data.total_count}<br>
+                            Variable: ${data.data.variable}<br>
+                            Files Processed: ${data.data.files_processed}<br>
+                            Job ID: ${data.data.job_id}
+                        </div>
+                    `;
+                    
+                    // Update each plot card with results
+                    let plotsHtml = '<div class="multi-plot-container">';
+                    
+                    Object.entries(visualizations).forEach(([plotType, viz]) => {
+                        const plotName = plotNames[plotType] || plotType;
+                        console.log(`Processing ${plotType}:`, viz);
+                        
+                        if (viz.success && viz.image_base64) {
+                            const imgSize = Math.round(viz.image_base64.length / 1024);
+                            plotsHtml += `
+                                <div class="plot-card">
+                                    <h4>${plotName}</h4>
+                                    <div class="image-container">
+                                        <img src="data:image/png;base64,${viz.image_base64}" 
+                                             alt="${plotName}" 
+                                             onload="console.log('${plotType} image loaded successfully')"
+                                             onerror="console.error('${plotType} image failed to load')"
+                                             style="max-width: 100%; height: auto;">
+                                        <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                                            Size: ${imgSize} KB
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            plotsHtml += `
+                                <div class="plot-card" style="border-color: #e74c3c;">
+                                    <h4 style="color: #e74c3c;">${plotName} - Failed</h4>
+                                    <div class="error">
+                                        ${viz.error || 'Unknown error'}<br>
+                                        Success: ${viz.success}<br>
+                                        Has image data: ${!!viz.image_base64}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    plotsHtml += '</div>';
+                    resultContent.innerHTML = headerHtml + plotsHtml;
+                } else {
+                    resultContent.innerHTML = `
+                        <div class="error">
+                            ❌ Visualization failed<br>
+                            Message: ${data.message || 'Unknown error'}<br>
+                            Note: This is likely because NASA Earthdata credentials are not configured.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultContent.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Set default times
+        const now = new Date();
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        document.getElementById('startTime').value = oneHourAgo.toISOString().slice(0, 16);
+        document.getElementById('endTime').value = now.toISOString().slice(0, 16);
+    </script>
+</body>
+</html>

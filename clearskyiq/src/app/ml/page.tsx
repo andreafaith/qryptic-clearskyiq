@@ -15,7 +15,7 @@ export default function ML() {
   const [viewMode, setViewMode] = useState("daily");
   const [timeRange, setTimeRange] = useState("48hrs");
   const [location, setLocation] = useState("Manila");
-  const [forecastData, setForecastData] = useState([
+  const [forecastData] = useState([
     { time: "6AM", aqi: 50 },
     { time: "8AM", aqi: 70 },
     { time: "10AM", aqi: 90 },
