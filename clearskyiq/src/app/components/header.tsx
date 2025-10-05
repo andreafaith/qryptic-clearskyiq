@@ -16,12 +16,12 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 
-        w-[40%] lg:w-[30%] transition-all duration-500 
+      className={`fixed top-8 left-1/2 transform -translate-x-1/2 z-50 
+        w-[35%] transition-all duration-500 
         ${
           scrolled
-            ? "bg-black/50 backdrop-blur-md border border-white/10 shadow-[0_0_25px_rgba(234,254,7,0.2)]"
-            : "bg-black/40 backdrop-blur-sm border border-white/5"
+            ? "bg-white/20 backdrop-blur-md border border-white/10 shadow-[0_0_25px_rgba(234,254,7,0.2)]"
+            : "bg-white/10 backdrop-blur-sm border border-white/5"
         } 
         rounded-2xl`}
     >
