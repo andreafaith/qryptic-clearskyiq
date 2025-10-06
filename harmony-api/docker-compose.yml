@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  harmony-api:
+    build: .
+    container_name: clearskyiq-harmony-api
+    ports:
+      - "8000:8000"
+    environment:
+      - EARTHDATA_USERNAME=${EARTHDATA_USERNAME:-your_username}
+      - EARTHDATA_PASSWORD=${EARTHDATA_PASSWORD:-your_password}
+      - SECRET_KEY=${SECRET_KEY:-harmony-api-secret-key-change-in-production}
+      - API_VERSION=1.0.0
+      - DEBUG=false
+    volumes:
+      # Persistent cache storage
+      - harmony_cache:/app/cache
+      # Persistent logs
+      - harmony_logs:/app/logs
+      # Persistent data storage for processed queries
+      - harmony_data:/app/data
+      # Optional: Mount local data directory for development
+      - ./data:/app/data:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  harmony_cache:
+    driver: local
+  harmony_logs:
+    driver: local
+  harmony_data:
+    driver: local

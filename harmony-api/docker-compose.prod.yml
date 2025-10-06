@@ -1,0 +1,47 @@
+services:
+  harmony-api:
+    image: ${dockerhub_username}/clearskyiq-harmony-api:latest
+    container_name: clearskyiq-harmony-api-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - EARTHDATA_USERNAME=${EARTHDATA_USERNAME}
+      - EARTHDATA_PASSWORD=${EARTHDATA_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+      - API_VERSION=1.0.0
+      - DEBUG=false
+    volumes:
+      # Persistent cache storage - survives container restarts
+      - harmony_cache_prod:/app/cache
+      # Persistent logs - for monitoring and debugging
+      - harmony_logs_prod:/app/logs
+      # Persistent data storage - processed queries and visualizations
+      - harmony_data_prod:/app/data
+      # Optional: Backup directory for data exports
+      - harmony_backups:/app/backups
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits for VPS
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+volumes:
+  harmony_cache_prod:
+    driver: local
+  harmony_logs_prod:
+    driver: local
+  harmony_data_prod:
+    driver: local
+  harmony_backups:
+    driver: local
