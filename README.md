@@ -1,4 +1,4 @@
-# ClearSkyIQ - NASA Space Apps Challenge 2025
+# ![ClearSkyIQ - NASA Space Apps Challenge 2025](https://clearskyiq.vercel.app) (click here)
 
 [![NASA Space Apps Challenge](https://img.shields.io/badge/NASA-Space%20Apps%20Challenge%202025-blue)](https://www.spaceappschallenge.org/2025/find-a-team/qryptic/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black)](https://nextjs.org/)
@@ -6,11 +6,6 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 
 **ClearSkyIQ** is a comprehensive air quality monitoring and prediction platform that combines NASA TEMPO satellite data with machine learning models to provide real-time atmospheric pollution visualization and forecasting capabilities. This project was developed for the [2025 NASA Space Apps Challenge](https://www.spaceappschallenge.org/2025/find-a-team/qryptic/) by team **qryptic**.
-
-VisitClearSkyIQ
-<a href="https://clearskyiq.vercel.app" target="_blank" ><h3 align="center">https://clearskyiq.vercel.app</h3></a>
-
-<a href="https://www.canva.com/design/DAG02ZAe-eA/w0MfNTPzIBJpIT02VQ-RZw/view?utm_content=DAG02ZAe-eA&amp;utm_campaign=designshare&amp;utm_medium=link2&amp;utm_source=uniquelinks&amp;utlId=h8bb2c45102" target="_blank" ><h3 align="center">Demo Presentation</h3></a>
 
 ## Project Overview
 
@@ -286,6 +281,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [NASA TEMPO Mission](https://www.earthdata.nasa.gov/data/instruments/tempo)
 - [NASA Earthdata](https://www.earthdata.nasa.gov/)
 - [Harmony-py Documentation](https://nasa.github.io/ASDC_Data_and_User_Services/TEMPO/how_to_examine_TEMPO_data_using_harmony-py.html)
+- [Demo Presentation](https://www.canva.com/design/DAG02ZAe-eA/w0MfNTPzIBJpIT02VQ-RZw/view?utm_content=DAG02ZAe-eA&amp;utm_campaign=designshare&amp;utm_medium=link2&amp;utm_source=uniquelinks&amp;utlId=h8bb2c45102)
+
 
 ## Acknowledgments
 
