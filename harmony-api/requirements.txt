@@ -1,1 +1,15 @@
-
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+pydantic>=2.5.0
+httpx>=0.25.0
+python-dotenv>=0.1.0
+harmony-py>=0.4.0
+xarray>=2023.12.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+cartopy>=0.22.0
+netCDF4>=1.6.0
+scipy>=1.11.0
+pandas>=2.0.0
+requests>=2.31.0
