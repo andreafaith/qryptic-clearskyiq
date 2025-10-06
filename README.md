@@ -7,6 +7,11 @@
 
 **ClearSkyIQ** is a comprehensive air quality monitoring and prediction platform that combines NASA TEMPO satellite data with machine learning models to provide real-time atmospheric pollution visualization and forecasting capabilities. This project was developed for the [2025 NASA Space Apps Challenge](https://www.spaceappschallenge.org/2025/find-a-team/qryptic/) by team **qryptic**.
 
+VisitClearSkyIQ
+<a href="https://clearskyiq.vercel.app" target="_blank" ><h3 align="center">https://clearskyiq.vercel.app</h3></a>
+
+<a href="https://www.canva.com/design/DAG02ZAe-eA/w0MfNTPzIBJpIT02VQ-RZw/view?utm_content=DAG02ZAe-eA&amp;utm_campaign=designshare&amp;utm_medium=link2&amp;utm_source=uniquelinks&amp;utlId=h8bb2c45102" target="_blank" ><h3 align="center">Demo Presentation</h3></a>
+
 ## Project Overview
 
 ClearSkyIQ addresses the critical need for accessible, real-time air quality monitoring by integrating multiple data sources and advanced visualization techniques. The platform provides:
