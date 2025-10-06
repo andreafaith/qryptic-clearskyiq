@@ -60,3 +60,4 @@ temp/
 *.hdf5
 *.h5
 
+env.docker
